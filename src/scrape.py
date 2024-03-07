@@ -75,7 +75,6 @@ def scrape_user_data(username, driver, update=True):
         update = True
 
 
-    print ('\nUpdated: ' + str(update))
     # Compare the existing data with the new data
     if update == True:
         url = f'https://www.pixwox.com/profile/{username}/'
@@ -104,10 +103,10 @@ def scrape_user_data(username, driver, update=True):
             'Posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()     if soup.find('div', class_='item_posts') else None,
             'Followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip() if soup.find('div', class_='item_followers') else None,
             'Following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,
-            'Private':                                                                                    True if soup.find('div', class_='notice') else False,
-            'Verified':                                                                                   True if soup.find('span', class_='ident verified icon icon_verified') else False,
             'URL':       url                                                                              if soup.find('div', class_='username') else None,
             'InstaURL':  f'https://www.instagram.com/{soup.find("div", class_="username").text.strip().replace("@", "")}/' if soup.find('div', class_='username') else None,
+            'Private':                                                                                    True if soup.find('div', class_='notice') else False,
+            'Verified':                                                                                   True if soup.find('span', class_='ident verified icon icon_verified') else False,
         }
 
 
@@ -115,7 +114,9 @@ def scrape_user_data(username, driver, update=True):
         with open(user_json, 'w') as file:
             json.dump(user_data, file, indent=2)
     
-    print(user_data)
+    for key, value in user_data.items():
+        print(f"{key}: {value}")
+    print ('Updated: ' + str(update) + '\n------------------------------------------------------------')
     return user_data
 
 
@@ -236,7 +237,7 @@ def init():
 # Generic options
     options.add_argument(f'--test-type=gpu') # Helps to render stuff with the GPU
     options.add_argument(f'user-agent={user_agent.random}') # Changes the User Agent everytime so that it helps to avoid detection
-    # options.add_argument( '--headless') # Makes it run in the background
+    options.add_argument( '--headless') # Makes it run in the background
 
 # Disable botting and automation flags in chrome
     options.add_experimental_option("useAutomationExtension", False)
@@ -251,7 +252,7 @@ if __name__ == "__main__":
     driver = init()
     
     while True:
-        name = input('User to look for: ')
+        name = input('\nUser to look for: ')
         usernames = find_user(name, driver)
     # scrape_instagram_posts(username_to_scrape, driver)
 
