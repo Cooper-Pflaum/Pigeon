@@ -13,6 +13,10 @@ from rich import print
 from rich.progress import Progress
 from rich.progress import track
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 import chromedriver_autoinstaller
 
 
@@ -79,6 +83,7 @@ def scrape_instagram_posts(username, driver):
     url = f'https://www.pixwox.com/profile/{username}/'
 
     if driver.current_url != url:
+        driver.delete_all_cookies();
         driver.get(url)
 
 
@@ -113,9 +118,6 @@ def scrape_instagram_posts(username, driver):
     print(f'Fetched Posts: {len(posts)}')
     # post_dir = save_dir+f'/post_{len(posts)-post_count}'
 
-
-
-
     with Progress(transient=True) as progress:
         downloading = progress.add_task("Downloading", total=None)  # Example total value
 
@@ -126,33 +128,63 @@ def scrape_instagram_posts(username, driver):
             break
 
 
-def scrape_user_data(username, driver, update=False):
-    url = f'https://www.pixwox.com/profile/{username}/'
+def find_user(name, driver):
+    name = name.replace(' ', '%20')
+    url = f'https://www.picuki.com/search/{name}'
+    driver.delete_all_cookies();
 
-    info_dir = f'../captured_users/{username}/'
-    info_file_path = os.path.join(info_dir, 'user.info')
+
+    driver.get(url)
+
+    wait = WebDriverWait(driver, 10)
+    element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.search-result-box")))
+    driver.execute_script("window.stop();")
+    # Use BeautifulSoup to parse the HTML
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    usernames = [username.text.strip() for username in soup.find_all('div', class_='result-username')]
+    for uname in usernames:
+        scrape_user_data(uname, driver)
+
+
+
+def scrape_user_data(username, driver, update=True):
+
+    username = username.replace('@','')
+
+
+    user_dir = f'../captured_users/{username}/'
+    user_json = os.path.join(user_dir, 'user.json')
+
 
     # Check if the user.info file exists and read its content
-    if os.path.exists(info_file_path):
-        with open(info_file_path, 'r') as file:
+    if os.path.exists(user_json):
+        with open(user_json, 'r') as json_file:
+
             try:
-                existing_data = json.load(file)
+                existing_data = json.load(json_file)
+                update = False
+
             except json.JSONDecodeError:
-                os.makedirs(info_dir, exist_ok=True)
+                os.makedirs(user_dir, exist_ok=True)
                 existing_data = {}
                 update = True
+
     else:
-        os.makedirs(info_dir, exist_ok=True)
+        os.makedirs(user_dir, exist_ok=True)
         existing_data = {}
         update = True
 
-    user_data = {}
+    user_data = existing_data
 
     # Compare the existing data with the new data
     if update == True:
-        # print('Fetching Profile')
+        url = f'https://www.pixwox.com/profile/{username}/'
+        driver.delete_all_cookies();
+
         driver.get(url)
-        # print('Fetched successfully')
+        wait = WebDriverWait(driver, 5)
+        element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "h1.fullname")))
+        driver.execute_script("window.stop();")
 
 
         # Use BeautifulSoup to parse the HTML
@@ -170,13 +202,16 @@ def scrape_user_data(username, driver, update=False):
             'following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,
         }
 
+
         # If the data has changed, update the user.info file
-        with open(info_file_path, 'w') as file:
+        with open(user_json, 'w') as file:
             json.dump(user_data, file, indent=2)
     else:
         # Read data from the existing file
-        with open(info_file_path, 'r') as file:
+        with open(user_json, 'r') as file:
             user_data = json.load(file)
+    
+    print(user_data)
 
 # Return the user_data variable
     return user_data
@@ -186,6 +221,8 @@ def scrape_user_data(username, driver, update=False):
 
 def init():
     print('Initializing...')
+
+# add a random user agent to our options
     user_agent = UserAgent() # create a UserAgent instance
 
     chromedriver_autoinstaller.install()  # Check if the current version of chromedriver exists
@@ -194,8 +231,17 @@ def init():
 
 # Set up Selenium WebDriver (you need to have the appropriate webdriver for your browser)
 # create a ChromeOptions instance
+
+
+    capa = DesiredCapabilities.CHROME
+    capa["pageLoadStrategy"] = "none"
+
+
     options = webdriver.ChromeOptions()
-# add a random user agent to our options
+
+
+    options.page_load_strategy = 'none'
+
     options.add_argument(f'--test-type=gpu') # Helps to render stuff with the GPU
     options.add_argument(f'user-agent={user_agent.random}') # Changes the User Agent everytime so that it helps to avoid detection
     options.add_argument( '--headless') # Makes it run in the background
@@ -208,12 +254,25 @@ def init():
     return driver
 
 
+# Pixwox
+# https://www.pixwox.com/search/?q=Cooper+Pflaum
+# https://www.pixwox.com/search/?q={NAME}
+# ' ' = '+'
+
+
+# Picuki
+# https://www.picuki.com/search/Cooper%20Pflaum
+# https://www.picuki.com/search/{NAME}
+# ' ' = %20
+
 
 
 
 if __name__ == "__main__":
-    username_to_scrape = "therock"  # Replace with the desired Instagram username
     driver = init()
     
-    scrape_user_data(username_to_scrape, driver)
-    scrape_instagram_posts(username_to_scrape, driver)
+    while True:
+        name = input('User to look for: ')
+        usernames = find_user(name, driver)
+    # scrape_instagram_posts(username_to_scrape, driver)
+

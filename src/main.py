@@ -155,13 +155,13 @@ class App(object):
             self.target_output = self.target_search.get_input(self.screen)
             
             if self.target_output != None:
-                output_data = scrape.scrape_user_data(self.target_output, self.driver)
+                output_data = scrape.find_user(self.target_output, self.driver)
 
-                for i, data in enumerate(output_data):
-                    if output_data[data] is not None:
-                        self.screen.addstr(5+i*2, 4, f'{data}: {output_data[data]}')
-                    else:
-                        self.screen.addstr(5+i*2, 4, f'{data}: N/A')
+                # for i, data in enumerate(output_data):
+                #     if output_data[data] is not None:
+                #         self.screen.addstr(5+i*2, 4, f'{data}: {output_data[data]}')
+                #     else:
+                #         self.screen.addstr(5+i*2, 4, f'{data}: N/A')
 
                 self.screen.addstr(20, 4, 'Press any key to continue...')
 
