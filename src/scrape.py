@@ -221,11 +221,12 @@ def scrape_user_data(username, driver, update=True):
 
 def init():
     print('Initializing...')
+    chromedriver_autoinstaller.install()  # Check if the current version of chromedriver exists
+    options = webdriver.ChromeOptions()
 
 # add a random user agent to our options
     user_agent = UserAgent() # create a UserAgent instance
 
-    chromedriver_autoinstaller.install()  # Check if the current version of chromedriver exists
                                           # and if it doesn't exist, download it automatically,
                                           # then add chromedriver to path
 
@@ -235,11 +236,6 @@ def init():
 
     capa = DesiredCapabilities.CHROME
     capa["pageLoadStrategy"] = "none"
-
-
-    options = webdriver.ChromeOptions()
-
-
     options.page_load_strategy = 'none'
 
     options.add_argument(f'--test-type=gpu') # Helps to render stuff with the GPU
@@ -252,20 +248,6 @@ def init():
     # start chrome with our custom options
     driver = webdriver.Chrome(options=options)
     return driver
-
-
-# Pixwox
-# https://www.pixwox.com/search/?q=Cooper+Pflaum
-# https://www.pixwox.com/search/?q={NAME}
-# ' ' = '+'
-
-
-# Picuki
-# https://www.picuki.com/search/Cooper%20Pflaum
-# https://www.picuki.com/search/{NAME}
-# ' ' = %20
-
-
 
 
 if __name__ == "__main__":
