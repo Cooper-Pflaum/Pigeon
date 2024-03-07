@@ -53,6 +53,7 @@ def scrape_user_data(username, driver, update=True):
 # Set up the directories for parsing the data
     user_dir = f'../captured_users/{username}/'     # Folder for storing the whole user
     user_json = os.path.join(user_dir, 'user.json') # JSON file for the user data
+
     user_data = {}                                  # Array for storing the captured data
 
 
@@ -72,7 +73,7 @@ def scrape_user_data(username, driver, update=True):
         update = True
 
 
-    print ('Updated: ' + str(update))
+    print ('\nUpdated: ' + str(update))
     # Compare the existing data with the new data
     if update == True:
         url = f'https://www.pixwox.com/profile/{username}/'
@@ -95,12 +96,14 @@ def scrape_user_data(username, driver, update=True):
 
 # Extract user data from the HTML
         user_data = {
-            'fullname':  soup.find('h1',  class_='fullname').text.strip()                                 if soup.find('h1',  class_='fullname') else None,
-            'username':  soup.find('div', class_='username').text.strip()                                 if soup.find('div', class_='username') else None,
-            'bio':       soup.find('div', class_='sum').text.strip().replace('\n', ' ')                   if soup.find('div', class_='sum') else None,
-            'posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()     if soup.find('div', class_='item_posts') else None,
-            'followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip() if soup.find('div', class_='item_followers') else None,
-            'following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,
+            'Username':  soup.find('div', class_='username').text.strip()                                 if soup.find('div', class_='username') else None,
+            'Fullname':  soup.find('h1',  class_='fullname').text.strip()                                 if soup.find('h1',  class_='fullname') else None,
+            'Bio':       soup.find('div', class_='sum').text.strip().replace('\n', ' ')                   if soup.find('div', class_='sum') else None,
+            'Posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()     if soup.find('div', class_='item_posts') else None,
+            'Followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip() if soup.find('div', class_='item_followers') else None,
+            'Following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,
+            'Private':                                                                                    True if soup.find('div', class_='notice') else False,
+            'Verified':                                                                                   True if soup.find('span', class_='ident verified icon icon_verified') else False,
         }
 
 
@@ -236,7 +239,7 @@ def init():
 # Generic options
     options.add_argument(f'--test-type=gpu') # Helps to render stuff with the GPU
     options.add_argument(f'user-agent={user_agent.random}') # Changes the User Agent everytime so that it helps to avoid detection
-    options.add_argument( '--headless') # Makes it run in the background
+    # options.add_argument( '--headless') # Makes it run in the background
 
 # Disable botting and automation flags in chrome
     options.add_experimental_option("useAutomationExtension", False)
