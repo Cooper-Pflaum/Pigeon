@@ -24,6 +24,95 @@ import chromedriver_autoinstaller
 
 
 
+def find_user(name, driver):
+    name = name.replace(' ', '%20')
+    url = f'https://www.picuki.com/search/{name}'
+    driver.delete_all_cookies();
+
+
+    driver.get(url)
+
+    wait = WebDriverWait(driver, 10)
+    element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.search-result-box")))
+    driver.execute_script("window.stop();")
+    # Use BeautifulSoup to parse the HTML
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    usernames = [username.text.strip() for username in soup.find_all('div', class_='result-username')]
+    for uname in usernames:
+        scrape_user_data(uname, driver)
+
+
+
+def scrape_user_data(username, driver, update=True):
+# Make sure that the usersnames that get returned don't have an @ symbol
+# If they don't have one when getting passed in then it just skips over 
+# And I don't have to worry about it
+    username = username.replace('@','')
+
+
+# Set up the directories for parsing the data
+    user_dir = f'../captured_users/{username}/'     # Folder for storing the whole user
+    user_json = os.path.join(user_dir, 'user.json') # JSON file for the user data
+    user_data = {}                                  # Array for storing the captured data
+
+
+# Check to see if there is already data on the user. 
+# If there is, then skip the update and just read the user data back
+# However if the user data doesn't exist, then update the data and write it to a json file
+    if os.path.exists(user_json):
+        with open(user_json, 'r') as json_file:
+            try:
+                user_data = json.load(json_file)
+                update = False
+            except json.JSONDecodeError:
+                os.makedirs(user_dir, exist_ok=True)
+                update = True
+    else:
+        os.makedirs(user_dir, exist_ok=True)
+        update = True
+
+
+    print ('Updated: ' + str(update))
+    # Compare the existing data with the new data
+    if update == True:
+        url = f'https://www.pixwox.com/profile/{username}/'
+# Delete all cookies to get rid of any tracked data that the site uses
+        driver.delete_all_cookies();
+
+# Fetch the actual site
+        driver.get(url)
+
+# Wait until the page data loads in, and then stop the loading
+        wait = WebDriverWait(driver, 5)
+        element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "h1.fullname")))
+        driver.execute_script("window.stop();")
+
+
+# Use BeautifulSoup to parse the HTML
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+
+
+# Extract user data from the HTML
+        user_data = {
+            'fullname':  soup.find('h1',  class_='fullname').text.strip()                                 if soup.find('h1',  class_='fullname') else None,
+            'username':  soup.find('div', class_='username').text.strip()                                 if soup.find('div', class_='username') else None,
+            'bio':       soup.find('div', class_='sum').text.strip().replace('\n', ' ')                   if soup.find('div', class_='sum') else None,
+            'posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()     if soup.find('div', class_='item_posts') else None,
+            'followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip() if soup.find('div', class_='item_followers') else None,
+            'following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,
+        }
+
+
+        # If the data has changed, update the user.info file
+        with open(user_json, 'w') as file:
+            json.dump(user_data, file, indent=2)
+    
+    print(user_data)
+    return user_data
+
+
+
 
 async def download_image(url, index, session, path):
     async with session.get(url) as response:
@@ -128,124 +217,32 @@ def scrape_instagram_posts(username, driver):
             break
 
 
-def find_user(name, driver):
-    name = name.replace(' ', '%20')
-    url = f'https://www.picuki.com/search/{name}'
-    driver.delete_all_cookies();
-
-
-    driver.get(url)
-
-    wait = WebDriverWait(driver, 10)
-    element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.search-result-box")))
-    driver.execute_script("window.stop();")
-    # Use BeautifulSoup to parse the HTML
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    usernames = [username.text.strip() for username in soup.find_all('div', class_='result-username')]
-    for uname in usernames:
-        scrape_user_data(uname, driver)
-
-
-
-def scrape_user_data(username, driver, update=True):
-
-    username = username.replace('@','')
-
-
-    user_dir = f'../captured_users/{username}/'
-    user_json = os.path.join(user_dir, 'user.json')
-
-
-    # Check if the user.info file exists and read its content
-    if os.path.exists(user_json):
-        with open(user_json, 'r') as json_file:
-
-            try:
-                existing_data = json.load(json_file)
-                update = False
-
-            except json.JSONDecodeError:
-                os.makedirs(user_dir, exist_ok=True)
-                existing_data = {}
-                update = True
-
-    else:
-        os.makedirs(user_dir, exist_ok=True)
-        existing_data = {}
-        update = True
-
-    user_data = existing_data
-
-    # Compare the existing data with the new data
-    if update == True:
-        url = f'https://www.pixwox.com/profile/{username}/'
-        driver.delete_all_cookies();
-
-        driver.get(url)
-        wait = WebDriverWait(driver, 5)
-        element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "h1.fullname")))
-        driver.execute_script("window.stop();")
-
-
-        # Use BeautifulSoup to parse the HTML
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-
-
-
-            # Extract user data
-        user_data = {
-            'fullname':  soup.find('h1',  class_='fullname').text.strip()                                 if soup.find('h1',  class_='fullname') else None,
-            'username':  soup.find('div', class_='username').text.strip()                                 if soup.find('div', class_='username') else None,
-            'bio':       soup.find('div', class_='sum').text.strip().replace('\n', ' ')                   if soup.find('div', class_='sum') else None,
-            'posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()     if soup.find('div', class_='item_posts') else None,
-            'followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip() if soup.find('div', class_='item_followers') else None,
-            'following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,
-        }
-
-
-        # If the data has changed, update the user.info file
-        with open(user_json, 'w') as file:
-            json.dump(user_data, file, indent=2)
-    else:
-        # Read data from the existing file
-        with open(user_json, 'r') as file:
-            user_data = json.load(file)
-    
-    print(user_data)
-
-# Return the user_data variable
-    return user_data
-
-
-
 
 def init():
     print('Initializing...')
     chromedriver_autoinstaller.install()  # Check if the current version of chromedriver exists
-    options = webdriver.ChromeOptions()
-
-# add a random user agent to our options
-    user_agent = UserAgent() # create a UserAgent instance
-
                                           # and if it doesn't exist, download it automatically,
                                           # then add chromedriver to path
+    options = webdriver.ChromeOptions()
 
-# Set up Selenium WebDriver (you need to have the appropriate webdriver for your browser)
-# create a ChromeOptions instance
+# add a random user agent to our chrome options (Helps to bypass page limits)
+    user_agent = UserAgent()
 
-
+# This gives me the ablity to cancel loading web pages and move on to the next page once a certain element appears 
     capa = DesiredCapabilities.CHROME
     capa["pageLoadStrategy"] = "none"
     options.page_load_strategy = 'none'
 
+# Generic options
     options.add_argument(f'--test-type=gpu') # Helps to render stuff with the GPU
     options.add_argument(f'user-agent={user_agent.random}') # Changes the User Agent everytime so that it helps to avoid detection
     options.add_argument( '--headless') # Makes it run in the background
 
-    options.add_experimental_option("useAutomationExtension", False) # Used to disable the automation and botting flags on chrome
+# Disable botting and automation flags in chrome
+    options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches",["enable-automation"])
 
-    # start chrome with our custom options
+# start chrome with our custom options
     driver = webdriver.Chrome(options=options)
     return driver
 
