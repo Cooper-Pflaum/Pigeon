@@ -43,6 +43,7 @@ def find_user(name, driver):
             scrape_user_data(uname, driver)
     else:
         scrape_user_data(name, driver)
+        scrape_instagram_posts(name,driver)
 
 
 def scrape_user_data(username, driver, update=True):
@@ -121,7 +122,6 @@ def scrape_user_data(username, driver, update=True):
 
 
 
-
 async def download_image(url, index, session, path):
     async with session.get(url) as response:
         if response.status == 200:
@@ -153,7 +153,7 @@ async def process_post_data(post, post_count, save_dir):
         'hashtags':    [tag.get_text() for tag in post.find('div', class_='sum').find_all('a') if tag.get_text().startswith('#')],
         'mentions':    [tag.get_text() for tag in post.find('div', class_='sum').find_all('a') if tag.get_text().startswith('@')],
     }
-    await download_images(download_urls, post_dir)
+    await download_images(post_data['urls'], post_dir)
 
 
 async def scrape_all_posts(parsed_posts, save_dir):
@@ -167,12 +167,16 @@ async def scrape_all_posts(parsed_posts, save_dir):
 
 
 def scrape_instagram_posts(username, driver):
-    # Load Instagram page
+# Make sure that the usersnames that get returned don't have an @ symbol
+# If they don't have one when getting passed in then it just skips over 
+# And I don't have to worry about it
+    username = username.replace('@','')
+
+# Load Instagram page
     url = f'https://www.pixwox.com/profile/{username}/'
 
-    if driver.current_url != url:
-        driver.delete_all_cookies();
-        driver.get(url)
+    driver.delete_all_cookies();
+    driver.get(url)
 
 
     with Progress(transient=True) as progress:
@@ -237,7 +241,7 @@ def init():
 # Generic options
     options.add_argument(f'--test-type=gpu') # Helps to render stuff with the GPU
     options.add_argument(f'user-agent={user_agent.random}') # Changes the User Agent everytime so that it helps to avoid detection
-    options.add_argument( '--headless') # Makes it run in the background
+    # options.add_argument( '--headless') # Makes it run in the background
 
 # Disable botting and automation flags in chrome
     options.add_experimental_option("useAutomationExtension", False)
