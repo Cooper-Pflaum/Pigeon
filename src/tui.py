@@ -1,16 +1,24 @@
-from pytermgui import Container
+import 
+app += Page(
+    Tower(
+        Row(
+            Text("I mimick the web"),
+            Text("For it cannot mimick me"),
+            eid="header",
+        ),
+        Tower(Text.lorem(), eid="body", group="center"),
+        Row(
+            Button("Ctrl-C : Quit"),
+            Button("F12 : Screenshot"),
+            eid="footer",
+        ),
+    ),
+    rules="""
+    Tower#body:
+        frame: [null, heavy, null, heavy]
 
-def func():
-    print("")
-
-
-form = (
-    Container(id="form")
-    + "[157 bold]This is a title"
-    + ""
-    + {"[72 italic]Label1": "[210]Button1"}
-    + {"[72 italic]Label2": "[210]Button2"}
-    + {"[72 italic]Label3": "[210]Button3"}
-    + ""
-    + ["Submit", lambda _, button, your_submit_handler(button.parent)]
+    Row#header, Row#footer:
+        alignment: [center, start]
+        height: 1
+""",
 )

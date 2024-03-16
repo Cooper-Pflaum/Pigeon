@@ -9,19 +9,12 @@ import threading
 import time
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
-from rich import print
-from rich.progress import Progress
-from rich.progress import track
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import chromedriver_autoinstaller
-
-
-
-
 
 
 def find_user(name, driver):
@@ -41,9 +34,11 @@ def find_user(name, driver):
         usernames = [username.text.strip() for username in soup.find_all('div', class_='result-username')]
         for uname in usernames:
             scrape_user_data(uname, driver)
+
     else:
         scrape_user_data(name, driver)
-        scrape_instagram_posts(name,driver)
+        if input("Proceed with download? [y/N] ").lower() == 'y':
+            scrape_instagram_posts(name, driver)
 
 
 def scrape_user_data(username, driver, update=True):
@@ -179,20 +174,15 @@ def scrape_instagram_posts(username, driver):
     driver.get(url)
 
 
-    with Progress(transient=True) as progress:
-        scrolling_task = progress.add_task("[green]Scrolling...", total=None)  # Example total value
 
-        while not progress.finished:
-            old_height = driver.execute_script("return document.body.scrollHeight;")
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(random.random()+0.5)  # Random delay
+    while True:
+        old_height = driver.execute_script("return document.body.scrollHeight;")
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(random.random()+0.5)  # Random delay
+        new_height = driver.execute_script("return document.body.scrollHeight;")
 
-            new_height = driver.execute_script("return document.body.scrollHeight;")
-            progress.update(scrolling_task, advance=5)
-
-            if new_height == old_height:
-                progress.update(scrolling_task, completed=100)  # Mark the task as completed
-                break
+        if new_height == old_height:
+            break
 
 
 # Use BeautifulSoup to parse the HTML
@@ -210,17 +200,9 @@ def scrape_instagram_posts(username, driver):
     photo_count = 0
     post_count = 0
     print(f'Fetched Posts: {len(posts)}')
-    # post_dir = save_dir+f'/post_{len(posts)-post_count}'
-
-    with Progress(transient=True) as progress:
-        downloading = progress.add_task("Downloading", total=None)  # Example total value
-
-        while not progress.finished:
-            progress.update(downloading, advance=1)
-            asyncio.run(scrape_all_posts(posts, save_dir))
-            progress.update(downloading, completed=100)  # Mark the task as completed
-            break
-
+    print(f'Downloading {len(posts)} posts...')
+    asyncio.run(scrape_all_posts(posts, save_dir))
+    print(f'Completed')
 
 
 def init():
@@ -241,7 +223,7 @@ def init():
 # Generic options
     options.add_argument(f'--test-type=gpu') # Helps to render stuff with the GPU
     options.add_argument(f'user-agent={user_agent.random}') # Changes the User Agent everytime so that it helps to avoid detection
-    # options.add_argument( '--headless') # Makes it run in the background
+    options.add_argument(f'--headless') # Makes it run in the background
 
 # Disable botting and automation flags in chrome
     options.add_experimental_option("useAutomationExtension", False)

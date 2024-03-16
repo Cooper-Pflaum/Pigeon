@@ -1,43 +1,61 @@
-import curses
+import shutil
 
-class SearchBar:
-    def __init__(self, height, width, y, x, title):
-        self.stdscr = curses.initscr()
-        curses.noecho()  # Turn off automatic echoing of keys
-        self.stdscr.keypad(True)  # Enable keypad mode
+from prompt_toolkit import prompt
+from prompt_toolkit.application import Application
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout.containers import Window, HSplit, VSplit
+from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.styles import Style
 
-        self.search_win = curses.newwin(height, width, y, x)
-        self.height = height
-        self.width = width
-        self.title = title
-        self.user_input = ""
+# Function to get the terminal width and height
+def get_terminal_size():
+    return shutil.get_terminal_size()
 
-    def get_input(self):
-        curses.curs_set(0)
-        while True:
-            self.search_win.border()
-            self.search_win.addstr(0, 2, f" {self.title}: ")
-            self.search_win.move(1,len(self.user_input)+(len(self.user_input) < self.width-2)) # Move the cursor to the end of the text and stops before overflowing the box
+def get_terminal_width():
+    return get_terminal_size().columns
 
-            key = self.search_win.getch()
-            if key == ord('\n'):  # Enter key pressed
-                break
-            elif key == 127:  # Backspace key pressed
-                self.user_input = self.user_input[:-1]
-            elif len(self.user_input) < self.width-2: # Input to the edge of the box
-                self.user_input += chr(key)
+def get_terminal_height():
+    return get_terminal_size().lines
 
-            self.search_win.addstr(1, 1, self.user_input + " " * (self.width - len(self.user_input) - 1))
-            self.search_win.refresh()
-        return self.user_input
+# Calculate border length based on terminal width and height
+border_width = get_terminal_width() - 40  # Adjusted for options on the side
+border_height = get_terminal_height() - 2  # Subtract 2 for borders on both sides
 
-    def close(self):
-        self.stdscr.keypad(False)
-        curses.echo()
-        curses.endwin()
+# Define the layout and style for the fullscreen application with dynamic border width and height
+layout = Layout(
+    container=HSplit([
+        Window(
+            FormattedTextControl(text='\n'.join([
+                '┌' + '─' * border_width + '┐',
+                *['│' + ' ' * border_width + '│' for _ in range(border_height)],
+                '└' + '─' * border_width + '┘'
+            ]))
+        ),
+        VSplit([
+            Window(FormattedTextControl(text='Select Functionality:'), width=20),
+            Window(FormattedTextControl(text='[ ] Option 1\n[ ] Option 2\n[ ] Option 3'), width=20)
+        ])
+    ])
+)
 
-# Example of how to use the SearchBar class
-search_bar = SearchBar(3, 50, 3, 0, 'Search')
-output = search_bar.get_input()
-search_bar.close()
-print(output)
+style = Style.from_dict({
+    'window': 'bg:#ffffff #000000',
+})
+
+# Key bindings for the application
+kb = KeyBindings()
+
+@kb.add('c-c') # CTRL+C
+def _(event):
+    event.app.exit()
+
+# Create the application with the defined layout, style, and key bindings
+app = Application(layout=layout, key_bindings=kb, style=style, full_screen=True)
+
+# Run the application in fullscreen mode with dynamic border width and height
+def run_app():
+    app.run()
+
+if __name__ == '__main__':
+    run_app()
