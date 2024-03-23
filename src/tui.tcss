@@ -1,0 +1,39 @@
+Screen {
+  layout: grid;
+  grid-size: 1 2;
+  grid-rows: 35% 65%;
+  grid-columns: 100%;
+  background: #000000 0%;
+  border: white round;
+}
+
+Container {
+  height: 100%;
+  width: 100%;
+}
+
+
+Input {
+  border: white round;
+  background: #000000 0%;
+  width: 40%;
+  height: auto;
+  dock: bottom;
+  align-horizontal: center;
+  text-align: center;
+}
+
+.main {
+  align: center top;
+}
+
+
+RichLog {
+  border: white round;
+  min_width: 25%;
+  min_height: 10;
+  width: auto;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}

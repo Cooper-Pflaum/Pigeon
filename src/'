@@ -9,11 +9,10 @@ import time
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import chromedriver_autoinstaller
 
 
@@ -25,18 +24,13 @@ def find_user(name, driver):
 
         driver.get(url)
 
-        try:
-            wait = WebDriverWait(driver, 10)
-            element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.search-result-box")))
-            driver.execute_script("window.stop();")
-
+        wait = WebDriverWait(driver, 10)
+        element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.search-result-box")))
+        driver.execute_script("window.stop();")
         # Use BeautifulSoup to parse the HTML
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            usernames = [username.text.strip() for username in soup.find_all('div', class_='result-username')]
-            return usernames
-
-        except TimeoutException:
-            return None
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        usernames = [username.text.strip() for username in soup.find_all('div', class_='result-username')]
+        return usernames
     #     for uname in usernames:
     #         scrape_user_data(uname, driver)
     #
@@ -95,7 +89,7 @@ def scrape_user_data(username, driver, update=True):
         user_data = {
             'Username':  soup.find('div', class_='username').text.strip()                                 if soup.find('div', class_='username') else None,
             'Fullname':  soup.find('h1',  class_='fullname').text.strip()                                 if soup.find('h1',  class_='fullname') else None,
-            'Bio':       soup.find('div', class_='sum').text.strip().replace('\n', '\n      ')            if soup.find('div', class_='sum') else None,
+            'Bio':       soup.find('div', class_='sum').text.strip().replace('\n', ' ')                   if soup.find('div', class_='sum') else None,
             'Posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()     if soup.find('div', class_='item_posts') else None,
             'Followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip() if soup.find('div', class_='item_followers') else None,
             'Following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,
@@ -230,7 +224,6 @@ def init():
 
 # start chrome with our custom options
     driver = webdriver.Chrome(options=options)
-    driver.get('https://cooper-pflaum.github.io')
     return driver
 
 
