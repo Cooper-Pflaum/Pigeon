@@ -17,6 +17,29 @@ from selenium.webdriver.support.ui import WebDriverWait
 import chromedriver_autoinstaller
 
 
+
+
+
+
+async def download_image(url, index, session, path):
+    async with session.get(url) as response:
+        if response.status == 200:
+            filename = os.path.join(path, f"image_{index}.jpg")
+            with open(filename, 'wb') as f:
+                while True:
+                    chunk = await response.content.read(1024)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            # print(f"Downloaded: {url} as image_{index}.jpg")
+
+async def download_images(urls, path):
+    async with aiohttp.ClientSession() as session:
+        tasks = [download_image(url, index, session, path) for index, url in enumerate(urls)]
+        await asyncio.gather(*tasks)
+
+
+
 def find_user(name, driver):
     if '@' not in name:
         name = name.replace(' ', '%20')
@@ -37,13 +60,11 @@ def find_user(name, driver):
 
         except TimeoutException:
             return None
-    #     for uname in usernames:
-    #         scrape_user_data(uname, driver)
-    #
-    # else:
-    #     scrape_user_data(name, driver)
-    #     if input("Proceed with download? [y/N] ").lower() == 'y':
-    #         scrape_instagram_posts(name, driver)
+
+
+    else:
+        scrape_user_data(name, driver)
+
 
 
 def scrape_user_data(username, driver, update=True):
@@ -91,20 +112,40 @@ def scrape_user_data(username, driver, update=True):
 # Use BeautifulSoup to parse the HTML
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
+
 # Extract user data from the HTML
         user_data = {
-            'Username':  soup.find('div', class_='username').text.strip()                                 if soup.find('div', class_='username') else None,
-            'Fullname':  soup.find('h1',  class_='fullname').text.strip()                                 if soup.find('h1',  class_='fullname') else None,
-            'Bio':       soup.find('div', class_='sum').text.strip().replace('\n', ' ')                    if soup.find('div', class_='sum') else None,
-            'Posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()     if soup.find('div', class_='item_posts') else None,
-            'Followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip() if soup.find('div', class_='item_followers') else None,
-            'Following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,
-            'URL':       url                                                                              if soup.find('div', class_='username') else None,
+            'Username':  soup.find('div', class_='username').text.strip()                                   if soup.find('div', class_='username') else None,
+            'Fullname':  soup.find('h1',  class_='fullname').text.strip()                                   if soup.find('h1',  class_='fullname') else None,
+            'Bio':       soup.find('div', class_='sum').text.strip().replace('\n', ' ')                     if soup.find('div', class_='sum') else None,
+            'Posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()       if soup.find('div', class_='item_posts') else None,
+            'Followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip()   if soup.find('div', class_='item_followers') else None,
+            'Following': soup.find('div', class_='item_following').find('div', class_='num').text.strip()   if soup.find('div', class_='item_following') else None,
+            'Pfp':       soup.find('div', class_='profile').find('a', class_="downbtn").get('href')         if soup.find('div', class_='ava_down') else None,
             'InstaURL':  f'https://www.instagram.com/{soup.find("div", class_="username").text.strip().replace("@", "")}/' if soup.find('div', class_='username') else None,
-            'Private':                                                                                    True if soup.find('div', class_='notice') else False,
-            'Verified':                                                                                   True if soup.find('span', class_='ident verified icon icon_verified') else False,
+            'Private':                                                                                      True if soup.find('div', class_='notice') else False,
+            'Verified':                                                                                     True if soup.find('span', class_='ident verified icon icon_verified') else False,
         }
 
+        pfp_pic = f'{user_dir}/{username}.png'
+        try:
+            # Send a GET request to the URL to fetch the image data
+            response = requests.get(user_data['Pfp'])
+            
+            # Check if the request was successful
+            if response.status_code == 200:
+                # Create the directory if it doesn't exist
+                os.makedirs(os.path.dirname(pfp_pic), exist_ok=True)
+                
+                # Save the image to the specified path
+                with open(pfp_pic, 'wb') as file:
+                    file.write(response.content)
+                
+                print(f"Image saved to: {pfp_pic}")
+            else:
+                print(f"Error downloading image: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading image: {e}")
         # If the data has changed, update the user.info file
         with open(user_json, 'w') as file:
             json.dump(user_data, file, indent=2)
@@ -114,24 +155,6 @@ def scrape_user_data(username, driver, update=True):
     print ('Updated: ' + str(update) + '\n------------------------------------------------------------')
     return user_data
 
-
-
-async def download_image(url, index, session, path):
-    async with session.get(url) as response:
-        if response.status == 200:
-            filename = os.path.join(path, f"image_{index}.jpg")
-            with open(filename, 'wb') as f:
-                while True:
-                    chunk = await response.content.read(1024)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-            # print(f"Downloaded: {url} as image_{index}.jpg")
-
-async def download_images(urls, path):
-    async with aiohttp.ClientSession() as session:
-        tasks = [download_image(url, index, session, path) for index, url in enumerate(urls)]
-        await asyncio.gather(*tasks)
 
 
 async def process_post_data(post, post_count, save_dir):

@@ -13,8 +13,7 @@ class UserInfoBox(Static):
     def __init__(self, user_data: dict):
         super().__init__()
         self.user_data = user_data
-        # self.image = Image.open(f'../captured_users/{self.user_data["Username"].replace("@", "")}/{self.user_data["Username"].replace("@", "")}.png')
-        self.image = Image.open(f'../captured_users/cooper_pflaum/cooper_pflaum.png')
+        self.image = Image.open(f'../captured_users/{self.user_data["Username"].replace("@", "")}/{self.user_data["Username"].replace("@", "")}.png')
         self.image_viewer = ImageViewer(self.image)
 
 
