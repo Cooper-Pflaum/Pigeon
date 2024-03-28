@@ -50,7 +50,7 @@ def scrape_user_data(username, driver, update=True):
 # Make sure that the usersnames that get returned don't have an @ symbol
 # If they don't have one when getting passed in then it just skips over 
 # And I don't have to worry about it
-    username = username.replace('@','')
+    username = username.replace('@','').lower()
 
 # Set up the directories for parsing the data
     user_dir = f'../captured_users/{username}/'     # Folder for storing the whole user
@@ -95,7 +95,7 @@ def scrape_user_data(username, driver, update=True):
         user_data = {
             'Username':  soup.find('div', class_='username').text.strip()                                 if soup.find('div', class_='username') else None,
             'Fullname':  soup.find('h1',  class_='fullname').text.strip()                                 if soup.find('h1',  class_='fullname') else None,
-            'Bio':       soup.find('div', class_='sum').text.strip().replace('\n', '\n      ')            if soup.find('div', class_='sum') else None,
+            'Bio':       soup.find('div', class_='sum').text.strip().replace('\n', ' ')                    if soup.find('div', class_='sum') else None,
             'Posts':     soup.find('div', class_='item_posts').find('div', class_='num').text.strip()     if soup.find('div', class_='item_posts') else None,
             'Followers': soup.find('div', class_='item_followers').find('div', class_='num').text.strip() if soup.find('div', class_='item_followers') else None,
             'Following': soup.find('div', class_='item_following').find('div', class_='num').text.strip() if soup.find('div', class_='item_following') else None,

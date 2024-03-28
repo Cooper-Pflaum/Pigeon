@@ -1,24 +1,48 @@
 Screen {
   layout: grid;
   grid-size: 1 2;
-  grid-rows: 35% 65%;
+  grid-rows: 10% 90%;
   grid-columns: 100%;
   background: #000000 0%;
   border: white round;
+  text-style: bold;
 }
 
-Container {
+#users {
+}
+
+
+
+
+.User-data {
+  width: auto;
   height: 100%;
-  width: 100%;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  border: #ffffff round;
 }
 
+.user-info-label {
+  color: white;
+}
+
+.user-info-username       { color: #88FF88; }
+.user-info-fullname       { color: #88FF88; }
+.user-info-bio            { color: #88FF88; }
+.user-info-followers      { color: #88FF88; }
+.user-info-following      { color: #88FF88; }
+.user-info-posts          { color: #88FF88; }
+.user-info-private        { color: #88FF88; }
+.user-info-private.false  { color: #FF8888; }
+.user-info-verified       { color: #88FF88; }
+.user-info-verified.false { color: #FF8888; }
 
 Input {
   border: white round;
   background: #000000 0%;
   width: 40%;
   height: auto;
-  dock: bottom;
+  dock: top;
   align-horizontal: center;
   text-align: center;
 }
@@ -28,12 +52,6 @@ Input {
 }
 
 
-RichLog {
-  border: white round;
-  min_width: 25%;
-  min_height: 10;
-  width: auto;
-  height: auto;
-  overflow-x: hidden;
-  overflow-y: hidden;
+Footer {
+  background: #00000000;
 }
