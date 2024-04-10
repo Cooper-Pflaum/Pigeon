@@ -37,7 +37,6 @@ class UserInfoBox(Static):
             ),
             # Terminal profile photo renderer
             ImageViewer(Image.open(f'../captured_users/{self.user_data["Username"].replace("@", "")}/{self.user_data["Username"].replace("@", "")}.png')),
-
             classes='User-data'
         )
 
@@ -69,8 +68,7 @@ class InputApp(App):
         #Container to hold all the profiles
         yield VerticalScroll(id="users")
 
-        # Displays key bindings
-        # yield Footer()
+        # Displays key bindings and version number in the footer
         yield Container(
             Label("ctrl+c -> quit", classes="footer-key-bindings"),
             Label("v0.1", classes="footer-version"),
