@@ -61,9 +61,9 @@ ImageViewer {
 }
 
 Button {
-  margin: 1 1;
-  width: 64;
-  height: 7;
+  margin: 1 2;
+  width: 32;
+  height: 3;
   column-span: 2;
 }
 
