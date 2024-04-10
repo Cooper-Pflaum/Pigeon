@@ -9,10 +9,9 @@ from textual.validation import Function, Number, ValidationResult, Validator
 from textual.widgets import Input, Label, RichLog, Log, Footer, Placeholder, Static, TextArea, Button
 
 
-
-
 # Class for the user profile container
 class UserInfoBox(Static):
+    # import the scraped user data into the class for displaying
     def __init__(self, user_data: dict):
         super().__init__()
         self.user_data = user_data
@@ -21,8 +20,7 @@ class UserInfoBox(Static):
     def compose(self) -> ComposeResult:
         # Container to hold the whole profile
         yield Container(
-
-            #Container to hold all the text information about a profile
+            # Container to hold all the text information about a profile
             Container(
                 TextArea(f"Username:  ", classes="user-info-label"), TextArea(f"{self.user_data['Username']}",   soft_wrap=False, read_only=True, classes="user-info-username"),
                 TextArea(f"Full name: ", classes="user-info-label"), TextArea(f"{self.user_data['Fullname']}",   soft_wrap=False, read_only=True, classes="user-info-fullname"),
@@ -32,14 +30,14 @@ class UserInfoBox(Static):
                 TextArea(f"Posts:     ", classes="user-info-label"), TextArea(f"{self.user_data['Posts']}",      soft_wrap=False, read_only=True, classes="user-info-posts"),
                 TextArea(f"Private:   ", classes="user-info-label"), TextArea(f"{self.user_data['Private']}",    soft_wrap=False, read_only=True, classes="user-info-private"  if self.user_data['Private'] else "user-info-private false"),
                 TextArea(f"Verified:  ", classes="user-info-label"), TextArea(f"{self.user_data['Verified']}",   soft_wrap=False, read_only=True, classes="user-info-verified" if self.user_data['Verified'] else "user-info-verified false"),
-            classes='user-data-text'
+                classes='user-data-text'
             ),
             # Terminal profile photo renderer
             ImageViewer(Image.open(f'../captured_users/{self.user_data["Username"].replace("@", "")}/{self.user_data["Username"].replace("@", "")}.png')),
 
             # Download button to download the posts of a user
             Button("Download", variant="success") if self.user_data['Private'] == False else Button("Download", disabled=True),
-        classes='User-data'
+            classes='User-data'
         )
 
     # Async funciton to download the user posts. This is needed because the async function in the scrape library will error out if this is not here
@@ -73,7 +71,6 @@ class InputApp(App):
         # Displays key bindings
         yield Footer()
 
-
     # Called when the user presses enter from the search bar
     # TODO:
         # Fix the freeze that happens whenever you query based on person Search
@@ -88,16 +85,12 @@ class InputApp(App):
         if users != None:
             users.remove()
 
-
-
-
         # Direct username search
         if '@' in self.query_one(Input).value:
             user_data = scrape.scrape_user_data(self.query_one(Input).value, driver)
             user_info_box = UserInfoBox(user_data)
             self.query_one("#users").mount(user_info_box)
             self.notify("Completed user query", severity="information", timeout=3)
-
 
         else:
             # Run the find user function which returns a list of usernames
@@ -106,7 +99,6 @@ class InputApp(App):
             # No users found
             if usernames == None:
                 self.notify("No user found", severity='error', timeout=3)
-
 
             # One user found
             elif len(usernames) == 1:
@@ -137,8 +129,6 @@ class InputApp(App):
     def action_quit(self) -> None:
         driver.quit()
         self.exit()
-
-
 
 
 # Main Function
