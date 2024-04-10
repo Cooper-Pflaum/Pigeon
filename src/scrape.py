@@ -96,7 +96,9 @@ def scrape_user_data(username, driver, update=True):
 
     # Compare the existing data with the new data
     if update == True:
+
         url = f'https://www.pixwox.com/profile/{username}/'
+
 # Delete all cookies to get rid of any tracked data that the site uses
         driver.delete_all_cookies();
 
@@ -108,10 +110,8 @@ def scrape_user_data(username, driver, update=True):
         element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "h1.fullname")))
         driver.execute_script("window.stop();")
 
-
 # Use BeautifulSoup to parse the HTML
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-
 
 # Extract user data from the HTML
         user_data = {
@@ -183,47 +183,43 @@ async def scrape_all_posts(parsed_posts, save_dir):
 
 
 
-def scrape_instagram_posts(username, driver):
-# Make sure that the usersnames that get returned don't have an @ symbol
-# If they don't have one when getting passed in then it just skips over 
-# And I don't have to worry about it
-    username = username.replace('@','')
+async def scrape_instagram_posts(username, driver):
+    # Make sure that the usersnames that get returned don't have an @ symbol
+    # If they don't have one when getting passed in then it just skips over 
+    # And I don't have to worry about it
+    username = username.replace('@', '')
 
-# Load Instagram page
+    # Load Instagram page
     url = f'https://www.pixwox.com/profile/{username}/'
 
-    driver.delete_all_cookies();
+    driver.delete_all_cookies()
     driver.get(url)
-
-
 
     while True:
         old_height = driver.execute_script("return document.body.scrollHeight;")
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(random.random()+0.5)  # Random delay
+        await asyncio.sleep(random.random() + 0.5)  # Random delay
         new_height = driver.execute_script("return document.body.scrollHeight;")
 
         if new_height == old_height:
             break
 
-
-# Use BeautifulSoup to parse the HTML
+    # Use BeautifulSoup to parse the HTML
     soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-# Find all the div elements with class 'post_box be-1'
-# Anything with this element I can consider to be a post
+    # Find all the div elements with class 'post_box be-1'
+    # Anything with this element I can consider to be a post
     posts = soup.find_all('div', class_='post_box be-1')
 
-# Loop through each post
+    # Loop through each post
     save_dir = f'../captured_users/{username}/posts'
     os.makedirs(save_dir, exist_ok=True)
-
 
     photo_count = 0
     post_count = 0
     print(f'Fetched Posts: {len(posts)}')
     print(f'Downloading {len(posts)} posts...')
-    asyncio.run(scrape_all_posts(posts, save_dir))
+    await scrape_all_posts(posts, save_dir)
     print(f'Completed')
 
 

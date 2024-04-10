@@ -1,36 +1,49 @@
 from textual import on
 from textual.app import App, ComposeResult
 from textual.validation import Function, Number, ValidationResult, Validator
-from textual.widgets import Input, Label, RichLog, Log, Footer, Placeholder, Static
+from textual.widgets import Input, Label, RichLog, Log, Footer, Placeholder, Static, TextArea, Button
 from textual.containers import Container, VerticalScroll
 from textual_imageview.viewer import ImageViewer
+import asyncio
 from PIL import Image
 import scrape
-
 
 
 class UserInfoBox(Static):
     def __init__(self, user_data: dict):
         super().__init__()
         self.user_data = user_data
-        self.image = Image.open(f'../captured_users/{self.user_data["Username"].replace("@", "")}/{self.user_data["Username"].replace("@", "")}.png')
-        self.image_viewer = ImageViewer(self.image)
-
 
     def compose(self) -> ComposeResult:
         yield Container(
-            Label(f"Username:  ", classes="user-info-label"), Label(f"{self.user_data['Username']}",   classes="user-info-username"),
-            Label(f"Full name: ", classes="user-info-label"), Label(f"{self.user_data['Fullname']}",   classes="user-info-fullname"),
-            Label(f"Bio:       ", classes="user-info-label"), Label(f"{self.user_data['Bio']}",        classes="user-info-bio"),
-            Label(f"Followers: ", classes="user-info-label"), Label(f"{self.user_data['Followers']}",  classes="user-info-followers"),
-            Label(f"Following: ", classes="user-info-label"), Label(f"{self.user_data['Following']}",  classes="user-info-following"),
-            Label(f"Posts:     ", classes="user-info-label"), Label(f"{self.user_data['Posts']}",      classes="user-info-posts"),
-            Label(f"Private:   ", classes="user-info-label"), Label(f"{self.user_data['Private']}",    classes="user-info-private" if self.user_data['Private'] else "user-info-private false"),
-            Label(f"Verified:  ", classes="user-info-label"), Label(f"{self.user_data['Verified']}",   classes="user-info-verified" if self.user_data['Verified'] else "user-info-verified false"),
+            Container(
+                TextArea(f"Username:  ", classes="user-info-label"), TextArea(f"{self.user_data['Username']}",   soft_wrap=False, read_only=True, classes="user-info-username"),
+                TextArea(f"Full name: ", classes="user-info-label"), TextArea(f"{self.user_data['Fullname']}",   soft_wrap=False, read_only=True, classes="user-info-fullname"),
+                TextArea(f"Bio:       ", classes="user-info-label"), TextArea(f"{self.user_data['Bio']}",        soft_wrap=False, read_only=True, classes="user-info-bio"),
+                TextArea(f"Followers: ", classes="user-info-label"), TextArea(f"{self.user_data['Followers']}",  soft_wrap=False, read_only=True, classes="user-info-followers"),
+                TextArea(f"Following: ", classes="user-info-label"), TextArea(f"{self.user_data['Following']}",  soft_wrap=False, read_only=True, classes="user-info-following"),
+                TextArea(f"Posts:     ", classes="user-info-label"), TextArea(f"{self.user_data['Posts']}",      soft_wrap=False, read_only=True, classes="user-info-posts"),
+                TextArea(f"Private:   ", classes="user-info-label"), TextArea(f"{self.user_data['Private']}",    soft_wrap=False, read_only=True, classes="user-info-private"  if self.user_data['Private'] else "user-info-private false"),
+                TextArea(f"Verified:  ", classes="user-info-label"), TextArea(f"{self.user_data['Verified']}",   soft_wrap=False, read_only=True, classes="user-info-verified" if self.user_data['Verified'] else "user-info-verified false"),
+                # Button("Download") if self.user_data['Private'] == False else None,
+            classes='user-data-text'
+            ),
+            ImageViewer(Image.open(f'../captured_users/{self.user_data["Username"].replace("@", "")}/{self.user_data["Username"].replace("@", "")}.png')),
+            Button("Download", variant="success") if self.user_data['Private'] == False else Button("Download", disabled=True),
 
-            self.image_viewer,
         classes='User-data'
         )
+
+    async def download_user_posts(self):
+        try:
+            await scrape.scrape_instagram_posts(self.user_data['Username'], driver)
+            self.notify("Successfully downloaded user's posts", severity="information", timeout=3)
+        except Exception as e:
+            self.notify(f"Error downloading posts: {str(e)}", severity="error", timeout=5)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        asyncio.create_task(self.download_user_posts())
+
 
 class InputApp(App):
     CSS_PATH = "tui.tcss"
@@ -43,6 +56,8 @@ class InputApp(App):
 
     @on(Input.Submitted, '.User-Search')
     def search(self, event: Input.Submitted) -> None:
+
+        self.query_one(Input).loading = True
 
         users = self.query('UserInfoBox')
 
@@ -63,7 +78,7 @@ class InputApp(App):
             usernames = scrape.find_user(self.query_one(Input).value, driver)
             if usernames == None:
                 self.notify("No user found", severity='error', timeout=3)
-                pass
+
             elif len(usernames) == 1:
                 user_data = scrape.scrape_user_data(usernames[0], driver)
                 user_info_box = UserInfoBox(user_data)
@@ -76,6 +91,7 @@ class InputApp(App):
                     self.query_one("#users").mount(user_info_box)
                 self.notify("Completed user query", severity="information", timeout=3)
 
+        self.query_one(Input).loading = False
         self.query_one(Input).clear()
 
     def action_quit(self) -> None:
