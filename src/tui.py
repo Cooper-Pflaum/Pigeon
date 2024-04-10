@@ -22,21 +22,22 @@ class UserInfoBox(Static):
         yield Container(
             # Container to hold all the text information about a profile
             Container(
-                TextArea(f"Username:  ", classes="user-info-label"), TextArea(f"{self.user_data['Username']}",   soft_wrap=False, read_only=True, classes="user-info-username"),
-                TextArea(f"Full name: ", classes="user-info-label"), TextArea(f"{self.user_data['Fullname']}",   soft_wrap=False, read_only=True, classes="user-info-fullname"),
-                TextArea(f"Bio:       ", classes="user-info-label"), TextArea(f"{self.user_data['Bio']}",        soft_wrap=False, read_only=True, classes="user-info-bio"),
-                TextArea(f"Followers: ", classes="user-info-label"), TextArea(f"{self.user_data['Followers']}",  soft_wrap=False, read_only=True, classes="user-info-followers"),
-                TextArea(f"Following: ", classes="user-info-label"), TextArea(f"{self.user_data['Following']}",  soft_wrap=False, read_only=True, classes="user-info-following"),
-                TextArea(f"Posts:     ", classes="user-info-label"), TextArea(f"{self.user_data['Posts']}",      soft_wrap=False, read_only=True, classes="user-info-posts"),
-                TextArea(f"Private:   ", classes="user-info-label"), TextArea(f"{self.user_data['Private']}",    soft_wrap=False, read_only=True, classes="user-info-private"  if self.user_data['Private'] else "user-info-private false"),
-                TextArea(f"Verified:  ", classes="user-info-label"), TextArea(f"{self.user_data['Verified']}",   soft_wrap=False, read_only=True, classes="user-info-verified" if self.user_data['Verified'] else "user-info-verified false"),
+                Label(f"Username:  ", classes="user-info-label"), Label(f"{self.user_data['Username']}",  classes="user-info-username"),
+                Label(f"Full name: ", classes="user-info-label"), Label(f"{self.user_data['Fullname']}",  classes="user-info-fullname"),
+                Label(f"Bio:       ", classes="user-info-label"), Label(f"{self.user_data['Bio']}",       classes="user-info-bio"),
+                Label(f"Followers: ", classes="user-info-label"), Label(f"{self.user_data['Followers']}", classes="user-info-followers"),
+                Label(f"Following: ", classes="user-info-label"), Label(f"{self.user_data['Following']}", classes="user-info-following"),
+                Label(f"Posts:     ", classes="user-info-label"), Label(f"{self.user_data['Posts']}",     classes="user-info-posts"),
+                Label(f"Private:   ", classes="user-info-label"), Label(f"{self.user_data['Private']}",   classes="user-info-private"  if self.user_data['Private'] else "user-info-private false"),
+                Label(f"Verified:  ", classes="user-info-label"), Label(f"{self.user_data['Verified']}",  classes="user-info-verified" if self.user_data['Verified'] else "user-info-verified false"),
+                
+                # Download button to download the posts of a user
+                Button("Download", variant="success") if self.user_data['Private'] == False else Button("Download", disabled=True),
                 classes='user-data-text'
             ),
             # Terminal profile photo renderer
             ImageViewer(Image.open(f'../captured_users/{self.user_data["Username"].replace("@", "")}/{self.user_data["Username"].replace("@", "")}.png')),
 
-            # Download button to download the posts of a user
-            Button("Download", variant="success") if self.user_data['Private'] == False else Button("Download", disabled=True),
             classes='User-data'
         )
 
@@ -69,7 +70,12 @@ class InputApp(App):
         yield VerticalScroll(id="users")
 
         # Displays key bindings
-        yield Footer()
+        # yield Footer()
+        yield Container(
+            Label("ctrl+c -> quit", classes="footer-key-bindings"),
+            Label("v0.1", classes="footer-version"),
+            classes="footer"
+        )
 
     # Called when the user presses enter from the search bar
     # TODO:

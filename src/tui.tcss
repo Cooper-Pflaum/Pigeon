@@ -1,6 +1,6 @@
 Screen {
   layout: grid;
-  grid-size: 1 2;
+  grid-size: 1 3;
   grid-rows: 10% 90%;
   grid-columns: 100%;
   background: #000000 0%;
@@ -34,32 +34,38 @@ VerticalScroll {
   margin: 0;
   padding: 0;
   layout: grid;
-  grid-size: 2 2;
+  grid-size: 2 1;
   grid-columns: 70% 30%;
+  grid-rows: 1fr;
   border: white round;
-}
-
-.user-info-label {
-  color: white;
 }
 
 .user-data-text {
   width: 100%;
-  height: auto;
+  height: 100%;
   layout: grid;
-  grid-size: 2 8;
+  grid-size: 2 9;
+  grid-rows: 1 1 auto 1 1 1 1 1 7;
   grid-columns: 10% 90%;
   background: #000000 0%;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 ImageViewer {
-  width: auto;
+  width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
   row-span: 2;
 }
 
+Button {
+  margin: 1 1;
+  width: 64;
+  height: 7;
+  column-span: 2;
+}
 
 .user-info-username       { color: #88FF88; }
 .user-info-fullname       { color: #88FF88; }
@@ -72,21 +78,30 @@ ImageViewer {
 .user-info-verified       { color: #88FF88; }
 .user-info-verified.false { color: #FF8888; }
 
-Button {
-  width: auto;
-  height: auto;
-}
 
-TextArea {
-  height: auto;
+.footer {
+  dock: bottom;
   width: 100%;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  border: none; 
-  padding: 0;
+  height: 1;
+  layout: grid;
+  grid-size: 2 1;
+  grid-rows: 100%;
+  grid-columns: 50% 50%;
+
 }
 
+.footer-key-bindings{
+  width: 100%;
+  height: 1;
+  background: #000000 0%;
+  content-align: left bottom;
+  margin-left: 1;
+}
 
-Footer {
-  background: #00000000;
+.footer-version{
+  width: 100%;
+  height: 1;
+  background: #000000 0%;
+  content-align: right bottom;
+  margin-right: 1;
 }
